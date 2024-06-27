@@ -1,0 +1,100 @@
+---
+title: "SA1 Statistical Computing"
+author: 
+- Bayquen, Christopher Gilbert A.
+- Billones, Cristel Kaye
+date: "2024-06-26"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, global_options, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, tidy.opts=list(width.cutoff=60), tidy=TRUE) 
+```
+
+Use Monte Carlo Simulation to investigate whether the empirical Type I error rate of the t-test is approximately equal to the nominal significance level \( \alpha \), when the sampled population is non-normal. The t-test is robust to mild departures from normality. Discuss the simulation results for the cases where the sampled population is (i) \( X^2 (1)\), (ii) Uniform(0,2), and (iii) Exponential(rate=1). In each case, test \( H_0: \mu = \mu_0 \) vs \(H_1: \mu \neq \mu_0 \), where \(\mu_0\) is the  mean of \(X^2\) (1), Uniform(0,2), and Exponential(1), respectively.
+
+```{r}
+# Estimate the Type-I error for different sample sizes
+num <- c(10, 25, 50, 100, 200, 500, 1000) 
+# Different number of Monte Carlo simulations
+m_values <- c(100, 500, 1000, 10000)      
+
+# Initialize an empty list to store the error tables for different m values
+err_tables <- list()
+
+for (m in m_values) {
+  err_table <- NULL
+  
+  for (n in num) {
+    cv <- qt(0.975, n-1)
+    
+    # Estimate the Type-I error for chi-square distribution
+    er1 <- mean(sapply(1:m, FUN = function(o) {
+      x <- rchisq(n, 1)
+      m_x <- mean(x)
+      se <- sqrt(var(x))
+      
+      abs((m_x - 1) * sqrt(n) / se) >= cv
+    })) 
+    
+    # Estimate the Type-I error for uniform distribution
+    er2 <- mean(sapply(1:m, FUN = function(o) {
+      x <- runif(n, 0, 2)
+      m_x <- mean(x)
+      se <- sqrt(var(x))
+      
+      abs((m_x - 1) * sqrt(n) / se) >= cv
+    }))   
+    
+    # Estimate the Type-I error for exponential distribution
+    er3 <- mean(sapply(1:m, FUN = function(o) {
+      x <- rexp(n, 1)
+      m_x <- mean(x)
+      se <- sqrt(var(x))
+      
+      abs((m_x - 1) * sqrt(n) / se) >= cv
+    }))  
+    
+    err_table <- cbind(err_table, c(er1, er2, er3))
+  }
+  
+  colnames(err_table) <- num
+  rownames(err_table) <- c("chi(1)", "U(0,2)", "exp(1)")
+  
+  # Store the error table in the list with the number of simulations as the name
+  err_tables[[paste0("m_", m)]] <- as.data.frame(err_table)
+}
+
+df_100 <- err_tables[["m_100"]]
+df_500 <- err_tables[["m_500"]]
+df_1000 <- err_tables[["m_1000"]]
+df_10000 <- err_tables[["m_10000"]]
+
+```
+
+```{r}
+library(ggplot2)
+library(reshape2)
+
+# Visualizing the Type I error rates for m = 100 simulations
+
+# Preparing dataframe for visualization
+df_100$Distribution <- rownames(df_100)
+df100_melt <- melt(df_100, id.vars = "Distribution", variable.name = "SampleSize", value.name = "TypeIErrorRate")
+
+
+# Plotting
+ggplot(df100_melt, aes(x = SampleSize, y = TypeIErrorRate, color = Distribution, group = Distribution)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Type I Error Rates for Different Distributions (m = 100 Simulations)",
+       x = "Sample Size",
+       y = "Type I Error Rate") +
+  theme_minimal()
+
+```
