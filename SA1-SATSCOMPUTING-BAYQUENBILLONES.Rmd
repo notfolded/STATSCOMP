@@ -18,20 +18,19 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(message=FALSE, tidy.opts=list(width.cutoff=60), tidy=TRUE) 
 # Load necessary libraries
 library(tidyverse)
+library(knitr)
 ```
 
 Use Monte Carlo Simulation to investigate whether the empirical Type I error rate of the t-test is approximately equal to the nominal significance level \( \alpha \), when the sampled population is non-normal. The t-test is robust to mild departures from normality. Discuss the simulation results for the cases where the sampled population is (i) \( X^2 (1)\), (ii) Uniform(0,2), and (iii) Exponential(rate=1). In each case, test \( H_0: \mu = \mu_0 \) vs \(H_1: \mu \neq \mu_0 \), where \(\mu_0\) is the  mean of \(X^2\) (1), Uniform(0,2), and Exponential(1), respectively.
 
 ```{r}
-
-
 # Different sample sizes
-num <- c(25, 50, 100, 200, 500, 1000, 5000) 
-# Different number of Monte Carlo simulations
+num <- c(50, 100, 500, 750, 1000, 2000, 5000) 
+# Different iterations of Monte Carlo simulations
 m_values <- c(100, 500, 1000, 10000)      
 
 # Set seed for reproducibility
-set.seed(123)
+set.seed(155)
 
 # Initialize an empty list to store the error tables for different m values
 err_tables <- list()
@@ -105,6 +104,7 @@ df_500 <- err_tables[["m_500"]]
 df_1000 <- err_tables[["m_1000"]]
 df_10000 <- err_tables[["m_10000"]]
 ```
+
 \newpage
 
 ## Code Documentation
@@ -135,7 +135,7 @@ In the algorithm shown above:
 
 > **m_x <- mean(x)**, calculates the sample mean from the generated \(x \). \
 **sd <- sqrt(var(x))**, calculates the sample standard deviation; the square root of the variance of x. \
-**abs((m_x - 1) sqrt(n) / se) >= cv**, computes the test statistic for the t-test as
+**abs((m_x - 1) sqrt(n) / sd) >= cv**, computes the test statistic for the t-test and comparing it to the critical value as
 
 \[
 \text{Test Statistic} = \left| \frac{(\bar{x} - \mu_0) \sqrt{n}}{s} \right|
@@ -152,7 +152,20 @@ In the algorithm shown above:
 
 > **se**, The standard error of the empirical Type I error rate is calculated as the standard deviation of `err_vals` divided by the square root of `m`. This gives an estimate of the variability in the Type I error rate.
 
-This algorithm is then used  for each of the non-normal distributions inside the Monte Carlo simulation loop that we have initialized in the prior code. We have tested for each of the non-normal distributions using different sample sizes (`25, 50, 100, 200, 500, 1000, 5000`), and also tested for different iterations of the Monte Carlo simulation (`100, 500, 1000, 10000`). Each iteration of the Monte Carlo simulation is then stored into each of their own data frames to be analyzed. 
+This algorithm is then used  for each of the non-normal distributions inside the Monte Carlo simulation loop that we have initialized in the prior code. We have tested for each of the non-normal distributions using different sample sizes (`50, 100, 500, 750, 1000, 2000, 5000`), and also tested for different iterations of the Monte Carlo simulation (`100, 500, 1000, 10000`). Each iteration of the Monte Carlo simulation is then stored into each of their own data frames to be analyzed. 
 
 ## Analysis and Visualization
 
+```{r, echo = FALSE}
+kable(df_10000, caption = "Type 1 Error with 10000 Monte Carlo Simulations")
+```
+
+
+```{r}
+ggplot(df_10000, aes(x = Sample_Size, y = Type_I_Error_Rate, color = Distribution)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Type I Error Rate by Sample 
+       Size and Distribution (m=10000)", x = "Sample Size", y = "Type I Error Rate") +
+  theme_minimal()
+```
