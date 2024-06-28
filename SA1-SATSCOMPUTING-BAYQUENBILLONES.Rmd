@@ -16,9 +16,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, global_options, include=FALSE}
 knitr::opts_chunk$set(message=FALSE, tidy.opts=list(width.cutoff=60), tidy=TRUE) 
-# Load necessary libraries
 library(tidyverse)
 library(knitr)
+library(gridExtra)
 ```
 
 Use Monte Carlo Simulation to investigate whether the empirical Type I error rate of the t-test is approximately equal to the nominal significance level \( \alpha \), when the sampled population is non-normal. The t-test is robust to mild departures from normality. Discuss the simulation results for the cases where the sampled population is (i) \( X^2 (1)\), (ii) Uniform(0,2), and (iii) Exponential(rate=1). In each case, test \( H_0: \mu = \mu_0 \) vs \(H_1: \mu \neq \mu_0 \), where \(\mu_0\) is the  mean of \(X^2\) (1), Uniform(0,2), and Exponential(1), respectively.
@@ -154,18 +154,206 @@ In the algorithm shown above:
 
 This algorithm is then used  for each of the non-normal distributions inside the Monte Carlo simulation loop that we have initialized in the prior code. We have tested for each of the non-normal distributions using different sample sizes (`50, 100, 500, 750, 1000, 2000, 5000`), and also tested for different iterations of the Monte Carlo simulation (`100, 500, 1000, 10000`). Each iteration of the Monte Carlo simulation is then stored into each of their own data frames to be analyzed. 
 
+
+\newpage
+
+
 ## Analysis and Visualization
+
+The following tables to be shown will show the randomly generated values using the Monte Carlo simulation for each of the number of iterations that we have simulated to estimate the empirical Type I error rate of the t-test and its standard error for the different non-normal distributions. The non-normal distributions considered are: (i) chi-square distribution with 1 degree of freedom, (ii)  Uniform distribution between 0 and 2, and (iii) Exponential distribution with rate 1, which are then subjected into testing for different sample sizes (50, 100, 500, 750, 1000, 2000, 5000) to figure out which sample size is the best for each distribution to achieve an empirical Type I error rate that is approximately equal to the nominal significance level \( \alpha  = 0.05\).
+
+### Monte Carlo Simulation with m = 100
+
+```{r, echo = FALSE}
+kable(df_100, caption = "Type 1 Error with 100 Monte Carlo Simulations")
+```
+
+Table 1 contains the results of a Monte Carlo simulation to estimate the empirical Type I error rate of the t-test and its standard error under various non-normal distributions, using \(m = 100\) iterations. 
+
+```{r}
+# Plot for Type I Error Rate
+p1 <- ggplot(df_100, aes(x = Sample_Size, y = Type_I_Error_Rate, color = Distribution)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Type I Error Rate by Sample Size and Distribution (m=100)", 
+       x = "Sample Size", 
+       y = "Type I Error Rate") +
+  theme_minimal()
+
+# Plot for Standard Error
+p2 <- ggplot(df_100, aes(x = Sample_Size, y = Standard_Error, color = Distribution)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ Distribution) +
+  labs(title = "Standard Error by Sample Size and Distribution (m=100)",
+       x = "Sample Size",
+       y = "Standard Error") +
+  theme_minimal()+
+  theme(axis.text.x = element_text(size = 8))
+
+
+grid.arrange(p1, p2, nrow = 2 )
+```
+
+For the first Monte Carlo simulation having only 100 iterations, we can observe the following:
+
+1. Chi-square Distribution \(X^2(1)\)
+
+> The Type I error rate starts high (0.08) for small sample size (n=50) but decreases with increasing sample size, stabilizing around 0.05 for large sample sizes. The standard error also decreases with increasing sample size, indicating more stable error rate estimates. This suggests that for small sample sizes, the t-test might not control the Type I error rate well when the underlying distribution is heavily skewed like the chi-square distribution. However, with larger sample sizes, the t-test performs better.
+
+2. Uniform Distribution \(U(0,2)\)
+
+> The Type I error rate is generally close to the nominal level of 0.05 for all sample sizes, with slight variations with n=100. The standard error is relatively low compared, suggesting consistent error rate estimates across different sample sizes. This indicates that the t-test maintains the Type I error rate well for uniformly distributed data, even for smaller sample sizes. This aligns with the expectation that the t-test is robust to mild deviation from normality.
+
+3. Exponential Distribution \(exp(1)\)
+
+> The Type I error rate starts relatively high (0.09) for small sample size (n=50) but quickly decreases as the sample size reach n = 1000 (it eventually even hit 0), but then again jumps back up around 0.05 and staying at 0.06 at n = 10000. The standard error decreases with increasing sample size, although takes a dip at n = 1000 to 0, similar to the other distributions. This suggests that the t-test may not control the Type I error rate well for small samples from highly skewed distributions, but it performs adequately with larger sample sizes.
+
+Overall, the t-test demonstrates varying levels of control over the Type I error rate depending on the distribution and sample size. For skewed distributions like the chi-square and exponential distributions, the Type I error rate initially deviates from the nominal level, especially with smaller sample sizes. However, as sample sizes increase, the error rate stabilizes closer to the desired level of 0.05, indicating improved control. In contrast, for the uniform distribution, the t-test consistently maintains the Type I error rate close to 0.05 across different sample sizes, suggesting robustness against mild deviations from normality.
+
+### Monte Carlo Simulation with m = 500
+
+```{r, echo = FALSE}
+kable(df_500, caption = "Type 1 Error with 500 Monte Carlo Simulations")
+```
+
+Table 2 contains the results of a Monte Carlo simulation to estimate the empirical Type I error rate of the t-test and its standard error under various non-normal distributions, using \(m = 500\) iterations. 
+
+### Monte Carlo Simulation with m = 1000
+
+```{r, echo = FALSE}
+kable(df_1000, caption = "Type 1 Error with 1000 Monte Carlo Simulations")
+```
+
+Table 3 contains the results of a Monte Carlo simulation to estimate the empirical Type I error rate of the t-test and its standard error under various non-normal distributions, using \(m = 1000\) iterations. 
+
+
+### Monte Carlo Simulation with m = 10000
 
 ```{r, echo = FALSE}
 kable(df_10000, caption = "Type 1 Error with 10000 Monte Carlo Simulations")
 ```
 
+Table 4 contains the results of a Monte Carlo simulation to estimate the empirical Type I error rate of the t-test and its standard error under various non-normal distributions, using \(m = 10,000\) iterations. 
 
 ```{r}
-ggplot(df_10000, aes(x = Sample_Size, y = Type_I_Error_Rate, color = Distribution)) +
+# Plot for Type I Error Rate
+p1 <- ggplot(df_10000, aes(x = Sample_Size, y = Type_I_Error_Rate, color = Distribution)) +
   geom_line() +
   geom_point() +
-  labs(title = "Type I Error Rate by Sample 
-       Size and Distribution (m=10000)", x = "Sample Size", y = "Type I Error Rate") +
+  labs(title = "Type I Error Rate by Sample Size and Distribution (m=10000)", 
+       x = "Sample Size", 
+       y = "Type I Error Rate") +
   theme_minimal()
+
+# Plot for Standard Error
+p2 <- ggplot(df_10000, aes(x = Sample_Size, y = Standard_Error, color = Distribution)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ Distribution) +
+  labs(title = "Standard Error by Sample Size and Distribution (m=10000)",
+       x = "Sample Size",
+       y = "Standard Error") +
+  theme_minimal()+
+  theme(axis.text.x = element_text(size = 8))
+
+grid.arrange(p1, p2, nrow = 2 )
 ```
+
+For the last Monte Carlo simulation having the most iterations at 10,000, we can observe the following:
+
+1. Chi-square Distribution \(X^2(1)\)
+
+> The Type I error rate starts at 0.0833 for the small sample size (n=50) and decreases as the sample size increases. For larger sample sizes (n >= 500), the Type I error rate stabilizes closer to 0.05. The standard error also decreases with increasing sample size, indicating more stable estimates.
+
+> This pattern suggests that the t-test does not control the Type I error rate well for small sample sizes when the underlying distribution is heavily skewed like the chi-square distribution. However, for larger sample sizes, the t-test performs better and maintains the Type I error rate close to the nominal level.
+
+2. Uniform Distribution \(U(0,2)\)
+
+> The Type I error rate is consistently close to the nominal level of 0.05 across all sample sizes, with a slight dip at n=1000 (0.0475). The standard error is relatively low, indicating consistent error rate estimates across different sample sizes. This indicates that the t-test maintains the Type I error rate well for uniformly distributed data, even for smaller sample sizes, suggesting robustness against mild deviations from normality.
+
+3. Exponential Distribution \(exp(1)\)
+
+> The Type I error rate starts at 0.0627 for the small sample size (n=50) but decreases with increasing sample size, stabilizing around 0.05 for larger sample sizes. The standard error decreases as well, although there's a slight increase at n=750 (0.0566). This suggests that the t-test may not control the Type I error rate well for small samples from highly skewed distributions, but it performs adequately with larger sample sizes, maintaining the Type I error rate closer to the nominal level.
+
+For skewed distributions like the chi-square and exponential distributions, the Type I error rate initially deviates from the nominal level, especially with smaller sample sizes. However, as sample sizes increase, the error rate stabilizes closer to the desired level of 0.05, indicating improved control. In contrast, for the uniform distribution, the t-test consistently maintains the Type I error rate close to 0.05 across different sample sizes. The results align well with the expected behavior of the t-test: it is robust to mild deviations from normality but may struggle with highly skewed distributions, particularly when the sample size is small. As sample size increases, the central limit theorem ensures that the sampling distribution of the mean approaches normality, leading to better control of the Type I error rate
+
+
+### Comparing different Monte Carlo Simulation Iterations 
+
+```{r, echo = FALSE}
+# Add column to each dataframe
+df_100$Iterations <- 100
+df_500$Iterations <- 500
+df_1000$Iterations <- 1000
+df_10000$Iterations <- 10000
+
+# Combining all data frames  into one
+all_data <- bind_rows(df_100, df_500, df_1000, df_10000)
+
+# Randomly sample half of the rows from the combined data FOR DISPLAY ONLY
+set.seed(123)  # Set seed for reproducibility
+half_data <- all_data %>% sample_frac(0.3)
+
+# Display the subset of the data as a table 
+kable(half_data, caption = "Type I Error for all Monte Carlo Simulations (Subset)")
+```
+Table 5 contains the results of all of the Monte Carlo simulation to estimate the empirical Type I error rate of the t-test and its standard error under various non-normal distributions, this table contains all of the Iterations of the Monte Carlo Simulations previously simulated. *Note: The table above only displays 25/84 rows of the entire data frame*
+
+```{r, warning = FALSE, message = FALSE}
+
+# Plot Type I Error Rate vs Sample Size for each distribution and number of iterations
+p1 <- ggplot(all_data, aes(x = Sample_Size, y = Type_I_Error_Rate, color = as.factor(Iterations))) +
+    geom_line() +
+    geom_point() +
+    facet_wrap(~Distribution) +
+    labs(title = "Type I Error Rate vs Sample Size",
+         x = "Sample Size",
+         y = "Type I Error Rate",
+         color = "Iterations") +
+    theme_minimal()+
+    theme(axis.text.x = element_text(size = 8))
+    
+ # Plot Standard Error vs Sample Size for each distribution and number of iterations
+p2 <- ggplot(all_data, aes(x = Sample_Size, y = Standard_Error, color = as.factor(Iterations))) +
+      geom_line() +
+      geom_point() +
+      facet_wrap(~Distribution) +
+      labs(title = "Standard Error vs Sample Size",
+           x = "Sample Size",
+           y = "Standard Error",
+           color = "Iterations") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(size = 8))
+      
+  
+grid.arrange(p1, p2, nrow = 2 )
+
+```
+
+Similar to the analysis of the previous Monte Carlo Simulations, the following can be observed in the visualizations provided for the entirety of the Monte Carlo Simulations:
+
+1. Chi-square Distribution \(X^2(1)\)
+
+> The Type I error rate starts high for small sample sizes and decreases as sample size increases. Larger iterations result in more stable estimates, with error rates converging closer to 0.05 for larger sample sizes.
+
+2. Uniform Distribution \(U(0,2)\)
+
+> The Type I error rate is consistently close to 0.05 across all sample sizes and iterations. This suggests robustness of the t-test for uniform distribution, regardless of the number of iterations.
+
+3. Exponential Distribution \(exp(1)\)
+
+> The Type I error rate starts high for small sample sizes and decreases as sample size increases. Larger iterations result in more stable estimates, with error rates converging closer to 0.05 for larger sample sizes.
+
+For all distributions, the standard error decreases as sample size increases. It can clearly be seen in the plots above that the as the number of iterations for the Monte Carlo Simulation increases, the lower the standard error becomes,indicating more precise estimates of the Type I error rate. It can be concluded that the varying number of iterations does affect the outcome of the tests:
+
+> - More iterations lead to more stable and precise estimates of the Type I error rate.
+> - **Smaller iterations (m=100)** can produce higher variability in the error rate estimates, especially for small sample sizes.
+> - **Larger iterations (m=10000)** provide more reliable estimates, with the Type I error rate converging closer to the nominal significance level of 0.05 as sample size increases.
+
+
+## Conclusion 
+
+The t-test demonstrates varying levels of control over the Type I error rate depending on the distribution and sample size.The results align well with the expected behavior of the t-test: it is robust to mild deviations from normality but may struggle with highly skewed distributions, particularly when the sample size is small.  For skewed distributions like the chi-square and exponential distributions, the Type I error rate initially deviates from the nominal level, especially with smaller sample sizes. However, as sample sizes increase, the error rate stabilizes closer to the desired level of 0.05, indicating improved control. The uniform distribution consistently maintains the Type I error rate close to 0.05 across different sample sizes, suggesting robustness against mild deviations from normality.
+
+Increasing the number of Monte Carlo iterations enhances the stability and precision of the Type I error rate estimates which is supported by the lowering values of the standard error as the number of iterations increases, underscoring the importance of using a sufficiently large number of iterations for reliable simulation results. This analysis emphasizes the importance of both sample size and the number of Monte Carlo iterations in ensuring accurate and reliable Type I error rate estimates when applying the t-test to non-normal distributions.
